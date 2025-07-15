@@ -1,0 +1,55 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
+  "build": {
+    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run dev",
+"devPath": "http://localhost:1422",
+    "distDir": "../dist"
+  },
+  "package": {
+    "productName": "ZippyCoin Agent Monitor",
+    "version": "1.0.0"
+  },
+  "tauri": {
+    "windows": [
+      {
+        "title": "ZippyCoin Agent Monitor",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 800,
+        "minHeight": 600,
+        "resizable": true,
+        "center": true
+      }
+    ],
+    "updater": {
+      "active": false
+    },
+    "security": {
+      "csp": null
+    },
+    "allowlist": {
+      "all": false,
+      "shell": {
+        "all": false,
+        "open": true
+      },
+      "fs": {
+        "all": true,
+        "scope": ["$APPDIR", "$RESOURCE"]
+      },
+      "http": {
+        "all": true,
+        "scope": ["http://localhost:11434", "http://127.0.0.1:11434"]
+      },
+      "process": {
+        "all": true
+      }
+    },
+    "bundle": {
+      "active": false,
+      "identifier": "com.zippycoin.agentmonitor"
+    }
+  }
+}
+

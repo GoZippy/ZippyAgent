@@ -1,0 +1,132 @@
+name: Daily Agent Status Report
+
+on:
+  schedule:
+    # Run daily at 9:00 AM UTC (adjust as needed)
+    - cron: '0 9 * * *'
+  workflow_dispatch:  # Allow manual trigger
+
+env:
+  # Slack configuration
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  
+  # Email configuration
+  EMAIL_SMTP_SERVER: ${{ secrets.EMAIL_SMTP_SERVER }}
+  EMAIL_SMTP_PORT: ${{ secrets.EMAIL_SMTP_PORT }}
+  EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+  EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+  EMAIL_TO: ${{ secrets.EMAIL_TO }}
+  
+  # Jira configuration
+  JIRA_URL: ${{ secrets.JIRA_URL }}
+  JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
+  JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+  JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+  JIRA_ASSIGNEE: ${{ secrets.JIRA_ASSIGNEE }}
+  
+  # Report hosting
+  REPORT_URL: ${{ secrets.REPORT_URL }}
+
+jobs:
+  generate-report:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: |
+        npm install
+        cd src-tauri && cargo build --release
+        
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    - name: Install Python dependencies
+      run: |
+        pip install requests
+        
+    - name: Generate Agent Status Report
+      run: |
+        echo "Generating agent status report..."
+        cd src-tauri
+        ./target/release/agent-monitor generate-report
+        
+    - name: Upload report as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: agent-status-report
+        path: reports/agent_status_*.md
+        retention-days: 30
+        
+    - name: Send Slack and Email notifications
+      run: |
+        cd scripts
+        python send_notifications.py
+        
+    - name: Create Jira tickets for critical issues
+      run: |
+        cd scripts
+        python create_jira_tickets.py
+        
+    - name: Commit report to repository
+      run: |
+        git config --global user.name 'GitHub Actions'
+        git config --global user.email 'actions@github.com'
+        git add reports/
+        git diff --cached --quiet || git commit -m "Daily agent status report - $(date +'%Y-%m-%d')"
+        git push
+        
+    - name: Deploy report to internal site
+      if: env.REPORT_URL != ''
+      run: |
+        # Example deployment to internal site
+        # This would depend on your internal infrastructure
+        echo "Deploying report to internal site..."
+        # curl -X POST ${{ secrets.DEPLOY_WEBHOOK }} \
+        #   -H "Authorization: Bearer ${{ secrets.DEPLOY_TOKEN }}" \
+        #   -F "report=@reports/agent_status_$(date +'%Y-%m-%d').md"
+        
+  notify-on-failure:
+    runs-on: ubuntu-latest
+    needs: generate-report
+    if: failure()
+    
+    steps:
+    - name: Send failure notification
+      run: |
+        curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} \
+          -H 'Content-type: application/json' \
+          -d '{
+            "text": "⚠️ Daily Agent Status Report generation failed!",
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "The daily agent status report generation has failed. Please check the GitHub Actions logs for details."
+                }
+              },
+              {
+                "type": "actions",
+                "elements": [
+                  {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "View Workflow"
+                    },
+                    "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                ]
+              }
+            ]
+          }'

@@ -1,0 +1,22 @@
+{
+  "name": "zippycoin-agent-monitor",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^1.5.3",
+    "chart.js": "^4.4.1"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^1.5.11",
+    "@types/node": "^20.11.5",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.12"
+  }
+}
