@@ -1,0 +1,2 @@
+# General\n.DS_Store\n*.log\n\n# Node / Frontend\nnode_modules/\n**/.next/\n**/dist/\n\n# Rust / Tauri\n**/target/\n\n# Python\n__pycache__/\n.env/\n.venv/\n
+\n# Remove Tauri build artifacts\napps/agent-monitor/src-tauri/target/\n*.rlib\n*.rmeta
