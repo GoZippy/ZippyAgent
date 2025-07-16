@@ -1,0 +1,7 @@
+# This file ensures the catalog directory is tracked by git
+# 
+# The catalog directory is for:
+# - Curated idea cards following the TEMPLATE.idea.md format
+# - Structured ideas with complete front-matter
+# - Named using YYYY-MM-DD-slug.md convention
+# - Ideas that have been reviewed and organized
