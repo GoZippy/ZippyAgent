@@ -1,0 +1,21 @@
+{
+  "project_name": "microservices-platform",
+  "description": "A comprehensive microservices platform with monitoring, logging, and auto-scaling",
+  "project_type": "container_orchestration",
+  "scale": "medium_team",
+  "technology": "nodejs",
+  "environment": "cloud",
+  "features": [
+    "monitoring",
+    "logging",
+    "security",
+    "backup",
+    "scaling",
+    "networking",
+    "storage",
+    "secrets"
+  ],
+  "use_existing_templates": true,
+  "generate_tests": true,
+  "include_docs": true
+}

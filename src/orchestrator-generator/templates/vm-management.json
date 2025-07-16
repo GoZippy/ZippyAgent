@@ -1,0 +1,210 @@
+{
+  "name": "VM Management Template",
+  "description": "Virtual machine setup and management template using Vagrant, Terraform, and Ansible",
+  "type": "vm_management",
+  "version": "1.0",
+  "metadata": {
+    "created_at": "2025-07-15",
+    "author": "ZippyAgent Platform",
+    "tags": ["vagrant", "terraform", "ansible", "vms", "infrastructure"]
+  },
+  "orchestrator": {
+    "name": "{{project_name}}",
+    "description": "{{description}}",
+    "type": "vm_management",
+    "scale": "{{scale}}",
+    "technology": "{{technology}}",
+    "environment": "{{environment}}",
+    "features": "{{features}}"
+  },
+  "infrastructure": {
+    "provider": "virtualbox",
+    "provisioner": "ansible",
+    "configuration_management": "ansible",
+    "base_os": "ubuntu-20.04",
+    "network": {
+      "type": "private_network",
+      "subnet": "192.168.56.0/24"
+    }
+  },
+  "vms": {
+    "master": {
+      "count": 1,
+      "cpu": 2,
+      "memory": 4096,
+      "disk": 50,
+      "ip": "192.168.56.10",
+      "roles": ["control_plane", "monitoring"]
+    },
+    "worker": {
+      "count": 3,
+      "cpu": 2,
+      "memory": 2048,
+      "disk": 30,
+      "ip_range": "192.168.56.11-13",
+      "roles": ["worker", "storage"]
+    },
+    "database": {
+      "count": 1,
+      "cpu": 2,
+      "memory": 4096,
+      "disk": 100,
+      "ip": "192.168.56.20",
+      "roles": ["database", "backup"]
+    }
+  },
+  "software": {
+    "base_packages": [
+      "curl",
+      "wget",
+      "git",
+      "vim",
+      "htop",
+      "net-tools",
+      "unzip"
+    ],
+    "application_stack": {
+      "runtime": "{{technology}}",
+      "database": "postgresql",
+      "cache": "redis",
+      "web_server": "nginx",
+      "process_manager": "systemd"
+    }
+  },
+  "security": {
+    "ssh_keys": {
+      "generate": true,
+      "key_path": "./keys/",
+      "key_name": "{{project_name}}_key"
+    },
+    "firewall": {
+      "enabled": true,
+      "rules": [
+        {
+          "port": 22,
+          "protocol": "tcp",
+          "source": "any",
+          "description": "SSH access"
+        },
+        {
+          "port": 80,
+          "protocol": "tcp",
+          "source": "any",
+          "description": "HTTP access"
+        },
+        {
+          "port": 443,
+          "protocol": "tcp",
+          "source": "any",
+          "description": "HTTPS access"
+        }
+      ]
+    },
+    "user_management": {
+      "create_service_user": true,
+      "sudo_access": true,
+      "password_auth": false
+    }
+  },
+  "monitoring": {
+    "node_exporter": {
+      "enabled": true,
+      "port": 9100
+    },
+    "prometheus": {
+      "enabled": true,
+      "port": 9090,
+      "vm": "master"
+    },
+    "grafana": {
+      "enabled": true,
+      "port": 3000,
+      "vm": "master"
+    },
+    "logs": {
+      "centralized": true,
+      "collector": "fluentd",
+      "storage": "elasticsearch"
+    }
+  },
+  "storage": {
+    "shared_storage": {
+      "enabled": true,
+      "type": "nfs",
+      "server": "master",
+      "mount_point": "/shared"
+    },
+    "backup": {
+      "enabled": true,
+      "schedule": "0 2 * * *",
+      "retention": "7d",
+      "destination": "./backups/"
+    }
+  },
+  "networking": {
+    "load_balancer": {
+      "enabled": true,
+      "type": "haproxy",
+      "vm": "master",
+      "backend_vms": ["worker-1", "worker-2", "worker-3"]
+    },
+    "dns": {
+      "enabled": true,
+      "server": "master",
+      "domain": "{{project_name}}.local"
+    }
+  },
+  "automation": {
+    "ansible_playbooks": [
+      "site.yml",
+      "database.yml",
+      "application.yml",
+      "monitoring.yml",
+      "security.yml"
+    ],
+    "terraform_modules": [
+      "networking",
+      "security",
+      "compute",
+      "storage"
+    ]
+  },
+  "files": {
+    "orchestrator.json": {
+      "template": "vm-management-config.json"
+    },
+    "tasks.ps1": {
+      "template": "vm-management-tasks.ps1"
+    },
+    "Vagrantfile": {
+      "template": "Vagrantfile"
+    },
+    "terraform/": {
+      "main.tf": {
+        "template": "terraform-main.tf"
+      },
+      "variables.tf": {
+        "template": "terraform-variables.tf"
+      },
+      "outputs.tf": {
+        "template": "terraform-outputs.tf"
+      }
+    },
+    "ansible/": {
+      "inventory.yml": {
+        "template": "ansible-inventory.yml"
+      },
+      "site.yml": {
+        "template": "ansible-site.yml"
+      },
+      "group_vars/": {
+        "all.yml": {
+          "template": "ansible-group-vars-all.yml"
+        }
+      }
+    },
+    "README.md": {
+      "template": "vm-management-readme.md"
+    }
+  }
+}

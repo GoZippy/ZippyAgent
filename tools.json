@@ -1,0 +1,151 @@
+{
+  "tools": {
+    "cursor": {
+      "name": "Cursor",
+      "description": "AI-powered code editor",
+      "executable": {
+        "windows": "cursor.exe",
+        "macos": "cursor",
+        "linux": "cursor"
+      },
+      "install_paths": {
+        "windows": [
+          "%LOCALAPPDATA%\\Programs\\cursor\\cursor.exe",
+          "%PROGRAMFILES%\\Cursor\\cursor.exe"
+        ],
+        "macos": [
+          "/Applications/Cursor.app/Contents/MacOS/Cursor"
+        ],
+        "linux": [
+          "/usr/bin/cursor",
+          "/usr/local/bin/cursor",
+          "~/.local/bin/cursor"
+        ]
+      },
+      "launch_args": [],
+      "process_name": "cursor",
+      "category": "editor"
+    },
+    "warp": {
+      "name": "Warp Terminal",
+      "description": "Modern terminal with AI features",
+      "executable": {
+        "windows": "warp.exe",
+        "macos": "warp",
+        "linux": "warp"
+      },
+      "install_paths": {
+        "windows": [
+          "%LOCALAPPDATA%\\warp\\warp.exe",
+          "%PROGRAMFILES%\\Warp\\warp.exe"
+        ],
+        "macos": [
+          "/Applications/Warp.app/Contents/MacOS/stable"
+        ],
+        "linux": [
+          "/usr/bin/warp-terminal",
+          "/usr/local/bin/warp-terminal",
+          "~/.local/bin/warp-terminal"
+        ]
+      },
+      "launch_args": [],
+      "process_name": "warp",
+      "category": "terminal"
+    },
+    "bolt": {
+      "name": "Bolt.new",
+      "description": "AI-powered web development platform",
+      "executable": {
+        "windows": "default_browser",
+        "macos": "default_browser",
+        "linux": "default_browser"
+      },
+      "url": "https://bolt.new",
+      "launch_args": [],
+      "process_name": "browser",
+      "category": "web"
+    },
+    "vscode": {
+      "name": "Visual Studio Code",
+      "description": "Popular code editor",
+      "executable": {
+        "windows": "code.exe",
+        "macos": "code",
+        "linux": "code"
+      },
+      "install_paths": {
+        "windows": [
+          "%LOCALAPPDATA%\\Programs\\Microsoft VS Code\\Code.exe",
+          "%PROGRAMFILES%\\Microsoft VS Code\\Code.exe"
+        ],
+        "macos": [
+          "/Applications/Visual Studio Code.app/Contents/MacOS/Electron"
+        ],
+        "linux": [
+          "/usr/bin/code",
+          "/usr/local/bin/code",
+          "~/.local/bin/code"
+        ]
+      },
+      "launch_args": [],
+      "process_name": "code",
+      "category": "editor"
+    },
+    "ollama": {
+      "name": "Ollama",
+      "description": "Local LLM runtime",
+      "executable": {
+        "windows": "ollama.exe",
+        "macos": "ollama",
+        "linux": "ollama"
+      },
+      "install_paths": {
+        "windows": [
+          "%LOCALAPPDATA%\\Programs\\Ollama\\ollama.exe",
+          "%PROGRAMFILES%\\Ollama\\ollama.exe"
+        ],
+        "macos": [
+          "/usr/local/bin/ollama",
+          "/opt/homebrew/bin/ollama"
+        ],
+        "linux": [
+          "/usr/bin/ollama",
+          "/usr/local/bin/ollama"
+        ]
+      },
+      "launch_args": ["serve"],
+      "process_name": "ollama",
+      "category": "ai"
+    },
+    "docker": {
+      "name": "Docker Desktop",
+      "description": "Container platform",
+      "executable": {
+        "windows": "Docker Desktop.exe",
+        "macos": "Docker Desktop",
+        "linux": "docker"
+      },
+      "install_paths": {
+        "windows": [
+          "%PROGRAMFILES%\\Docker\\Docker\\Docker Desktop.exe"
+        ],
+        "macos": [
+          "/Applications/Docker.app/Contents/MacOS/Docker Desktop"
+        ],
+        "linux": [
+          "/usr/bin/docker"
+        ]
+      },
+      "launch_args": [],
+      "process_name": "docker",
+      "category": "infrastructure"
+    }
+  },
+  "categories": {
+    "editor": "Code Editors",
+    "terminal": "Terminals",
+    "web": "Web Tools",
+    "ai": "AI Tools",
+    "infrastructure": "Infrastructure"
+  }
+}

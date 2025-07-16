@@ -1,0 +1,56 @@
+{
+  "name": "@zippy/platform-core",
+  "version": "1.0.0",
+  "description": "Core platform services for ZippyAgent - monitoring, logging, messaging, event bus",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "dev": "ts-node src/index.ts",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src/**/*.ts",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "platform",
+    "monitoring",
+    "logging",
+    "messaging",
+    "event-bus",
+    "grpc",
+    "websocket",
+    "agent-supervision",
+    "heartbeat",
+    "metrics"
+  ],
+  "author": "ZippyAgent Platform Team",
+  "license": "MIT",
+  "dependencies": {
+    "@grpc/grpc-js": "^1.10.0",
+    "@grpc/proto-loader": "^0.7.10",
+    "ws": "^8.16.0",
+    "eventemitter3": "^5.0.1",
+    "winston": "^3.11.0",
+    "winston-daily-rotate-file": "^4.7.1",
+    "prom-client": "^15.1.0",
+    "uuid": "^9.0.1",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/ws": "^8.5.10",
+    "@types/uuid": "^9.0.7",
+    "typescript": "^5.3.0",
+    "ts-node": "^10.9.2",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.11",
+    "eslint": "^8.56.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}

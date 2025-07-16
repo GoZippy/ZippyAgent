@@ -1,0 +1,147 @@
+{
+  "name": "Container Orchestration Template",
+  "description": "Docker and Kubernetes orchestration template for containerized applications",
+  "type": "container_orchestration",
+  "version": "1.0",
+  "metadata": {
+    "created_at": "2025-07-15",
+    "author": "ZippyAgent Platform",
+    "tags": ["docker", "kubernetes", "containers", "orchestration"]
+  },
+  "orchestrator": {
+    "name": "{{project_name}}",
+    "description": "{{description}}",
+    "type": "container_orchestration",
+    "scale": "{{scale}}",
+    "technology": "{{technology}}",
+    "environment": "{{environment}}",
+    "features": "{{features}}"
+  },
+  "services": {
+    "app": {
+      "image": "{{technology}}:latest",
+      "port": 3000,
+      "environment": {
+        "NODE_ENV": "production",
+        "PORT": "3000"
+      },
+      "volumes": [
+        "./app:/app",
+        "./logs:/app/logs"
+      ],
+      "depends_on": ["database", "cache"]
+    },
+    "database": {
+      "image": "postgres:15",
+      "environment": {
+        "POSTGRES_DB": "{{project_name}}",
+        "POSTGRES_USER": "app",
+        "POSTGRES_PASSWORD": "changeme"
+      },
+      "volumes": [
+        "./data/postgres:/var/lib/postgresql/data"
+      ],
+      "port": 5432
+    },
+    "cache": {
+      "image": "redis:7",
+      "port": 6379,
+      "volumes": [
+        "./data/redis:/data"
+      ]
+    }
+  },
+  "monitoring": {
+    "prometheus": {
+      "image": "prom/prometheus:latest",
+      "port": 9090,
+      "volumes": [
+        "./config/prometheus.yml:/etc/prometheus/prometheus.yml"
+      ]
+    },
+    "grafana": {
+      "image": "grafana/grafana:latest",
+      "port": 3001,
+      "environment": {
+        "GF_SECURITY_ADMIN_PASSWORD": "changeme"
+      },
+      "volumes": [
+        "./config/grafana:/etc/grafana",
+        "./data/grafana:/var/lib/grafana"
+      ]
+    }
+  },
+  "scaling": {
+    "horizontal_pod_autoscaler": {
+      "enabled": true,
+      "min_replicas": 2,
+      "max_replicas": 10,
+      "target_cpu_utilization": 70
+    },
+    "vertical_pod_autoscaler": {
+      "enabled": false
+    }
+  },
+  "networking": {
+    "service_mesh": {
+      "enabled": false,
+      "provider": "istio"
+    },
+    "ingress": {
+      "enabled": true,
+      "class": "nginx",
+      "annotations": {
+        "nginx.ingress.kubernetes.io/ssl-redirect": "true"
+      }
+    }
+  },
+  "security": {
+    "rbac": {
+      "enabled": true
+    },
+    "network_policies": {
+      "enabled": true
+    },
+    "pod_security_policies": {
+      "enabled": true
+    },
+    "secret_management": {
+      "provider": "kubernetes",
+      "external_secrets": false
+    }
+  },
+  "backup": {
+    "enabled": true,
+    "schedule": "0 2 * * *",
+    "retention": "7d",
+    "storage": {
+      "type": "s3",
+      "bucket": "{{project_name}}-backups"
+    }
+  },
+  "files": {
+    "orchestrator.json": {
+      "template": "container-orchestration-config.json"
+    },
+    "tasks.ps1": {
+      "template": "container-orchestration-tasks.ps1"
+    },
+    "docker-compose.yml": {
+      "template": "docker-compose.yml"
+    },
+    "kubernetes/": {
+      "deployment.yaml": {
+        "template": "k8s-deployment.yaml"
+      },
+      "service.yaml": {
+        "template": "k8s-service.yaml"
+      },
+      "ingress.yaml": {
+        "template": "k8s-ingress.yaml"
+      }
+    },
+    "README.md": {
+      "template": "container-orchestration-readme.md"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+# ZippyAgent configuration file
+# Copy or reference this file as `config/zippyagent.yaml` at the root of your project.
+#
+# Any setting may be overridden at runtime via environment variables:
+#   ZIPPY_REPO_MIRROR_PATH     -> repoMirrorPath
+#   ZIPPY_VECTOR_DB_PATH       -> vectorDbPath
+#   ZIPPY_EMBEDDING_PROVIDER   -> embeddingProvider.provider
+#   ZIPPY_MODEL_NAME           -> embeddingProvider.modelName
+#   ZIPPY_API_KEY              -> embeddingProvider.apiKey
+#   ZIPPY_BATCH_SIZE           -> batchSize
+#   ZIPPY_MAX_CHUNK_TOKENS     -> maxChunkTokens
+#
+# Paths may be absolute or relative to the repository root.
+
+repoMirrorPath: "./data/repos"
+vectorDbPath: "./data/vector_db"
+
+embeddingProvider:
+  provider: "ollama"   # one of: ollama | openai | warp
+  modelName: "all-minilm"
+  apiKey: ""           # leave blank for providers that do not need a key
+
+batchSize: 8              # how many files/chunks to embed in a single operation
+maxChunkTokens: 800       # hard-cap on tokens per chunk that will be embedded
+

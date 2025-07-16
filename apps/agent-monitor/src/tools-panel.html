@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Development Tools Panel</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            margin: 0;
+            color: #00ff88;
+        }
+        
+        .refresh-btn {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .refresh-btn:hover {
+            background: #0052a3;
+        }
+        
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+        
+        .category {
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #333;
+        }
+        
+        .category h2 {
+            margin: 0 0 15px 0;
+            color: #00ff88;
+            font-size: 18px;
+        }
+        
+        .tool-grid {
+            display: grid;
+            gap: 10px;
+        }
+        
+        .tool-card {
+            background: #3a3a3a;
+            border-radius: 6px;
+            padding: 15px;
+            border: 1px solid #444;
+            transition: all 0.2s ease;
+        }
+        
+        .tool-card:hover {
+            background: #4a4a4a;
+            border-color: #00ff88;
+        }
+        
+        .tool-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        
+        .tool-name {
+            font-weight: bold;
+            color: #ffffff;
+            font-size: 16px;
+        }
+        
+        .tool-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .status-indicator.running {
+            background: #00ff88;
+        }
+        
+        .status-indicator.dormant {
+            background: #ffaa00;
+        }
+        
+        .status-indicator.not-installed {
+            background: #ff4444;
+        }
+        
+        .tool-description {
+            color: #cccccc;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .tool-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .launch-btn {
+            background: #00ff88;
+            color: #000000;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .launch-btn:hover {
+            background: #00cc6a;
+        }
+        
+        .launch-btn:disabled {
+            background: #666666;
+            color: #999999;
+            cursor: not-allowed;
+        }
+        
+        .project-path {
+            flex: 1;
+            background: #2a2a2a;
+            border: 1px solid #555;
+            color: #ffffff;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .project-path::placeholder {
+            color: #888;
+        }
+        
+        .tool-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .error {
+            background: #ff4444;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .success {
+            background: #00ff88;
+            color: #000000;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 5px;
+            z-index: 1000;
+            max-width: 400px;
+            word-wrap: break-word;
+        }
+        
+        .message.success {
+            background: #00ff88;
+            color: #000000;
+        }
+        
+        .message.error {
+            background: #ff4444;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Development Tools Panel</h1>
+            <button class="refresh-btn" onclick="refreshTools()">🔄 Refresh</button>
+        </div>
+        
+        <div id="loading" class="loading">
+            <p>Loading tools...</p>
+        </div>
+        
+        <div id="error" class="error" style="display: none;"></div>
+        
+        <div id="tools-container" class="categories" style="display: none;">
+            <!-- Tools will be loaded here -->
+        </div>
+    </div>
+
+    <script>
+        const { invoke } = window.__TAURI__.tauri;
+        
+        let toolsData = {};
+        
+        async function initializeToolLauncher() {
+            try {
+                const result = await invoke('initialize_tool_launcher');
+                console.log('Tool launcher initialized:', result);
+                return true;
+            } catch (error) {
+                console.error('Failed to initialize tool launcher:', error);
+                showMessage('Failed to initialize tool launcher: ' + error, 'error');
+                return false;
+            }
+        }
+        
+        async function loadTools() {
+            try {
+                const toolsByCategory = await invoke('get_tools_by_category');
+                toolsData = toolsByCategory;
+                renderTools();
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('tools-container').style.display = 'grid';
+            } catch (error) {
+                console.error('Failed to load tools:', error);
+                showError('Failed to load tools: ' + error);
+            }
+        }
+        
+        function renderTools() {
+            const container = document.getElementById('tools-container');
+            container.innerHTML = '';
+            
+            for (const [categoryId, tools] of Object.entries(toolsData)) {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category';
+                
+                const categoryTitle = getCategoryTitle(categoryId);
+                categoryDiv.innerHTML = `
+                    <h2>${categoryTitle}</h2>
+                    <div class="tool-grid">
+                        ${tools.map(tool => createToolCard(tool)).join('')}
+                    </div>
+                `;
+                
+                container.appendChild(categoryDiv);
+            }
+        }
+        
+        function getCategoryTitle(categoryId) {
+            const categoryNames = {
+                'editor': '📝 Code Editors',
+                'terminal': '💻 Terminals',
+                'web': '🌐 Web Tools',
+                'ai': '🤖 AI Tools',
+                'infrastructure': '🏗️ Infrastructure'
+            };
+            return categoryNames[categoryId] || categoryId;
+        }
+        
+        function createToolCard(tool) {
+            const statusClass = tool.is_running ? 'running' : 
+                              tool.is_installed ? 'dormant' : 'not-installed';
+            const statusText = tool.is_running ? 'Running' : 
+                              tool.is_installed ? 'Installed' : 'Not Installed';
+            
+            const isLaunchable = tool.is_installed || tool.category === 'web';
+            
+            return `
+                <div class="tool-card">
+                    <div class="tool-header">
+                        <div class="tool-name">${tool.name}</div>
+                        <div class="tool-status">
+                            <div class="status-indicator ${statusClass}"></div>
+                            <span>${statusText}</span>
+                        </div>
+                    </div>
+                    <div class="tool-description">${tool.description}</div>
+                    <div class="tool-actions">
+                        <input type="text" class="project-path" 
+                               placeholder="Project path (optional)"
+                               id="project-path-${tool.id}">
+                        <button class="launch-btn" 
+                                onclick="launchTool('${tool.id}')"
+                                ${!isLaunchable ? 'disabled' : ''}>
+                            ${tool.category === 'web' ? 'Open' : 'Launch'}
+                        </button>
+                    </div>
+                    <div class="tool-info">
+                        <span>ID: ${tool.id}</span>
+                        ${tool.pid ? `<span>PID: ${tool.pid}</span>` : ''}
+                        ${tool.executable_path ? `<span>📁 Found</span>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+        
+        async function launchTool(toolId) {
+            const projectPathInput = document.getElementById(`project-path-${toolId}`);
+            const projectPath = projectPathInput.value.trim() || null;
+            
+            try {
+                const result = await invoke('launch_tool', {
+                    toolId: toolId,
+                    projectPath: projectPath
+                });
+                
+                if (result.success) {
+                    showMessage(`✅ ${result.message}`, 'success');
+                    // Refresh tools after a short delay to show updated status
+                    setTimeout(() => {
+                        loadTools();
+                    }, 1000);
+                } else {
+                    showMessage(`❌ ${result.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('Failed to launch tool:', error);
+                showMessage(`❌ Failed to launch tool: ${error}`, 'error');
+            }
+        }
+        
+        async function refreshTools() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('tools-container').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            
+            try {
+                await invoke('reload_tools_config');
+                await loadTools();
+                showMessage('🔄 Tools refreshed successfully', 'success');
+            } catch (error) {
+                console.error('Failed to refresh tools:', error);
+                showError('Failed to refresh tools: ' + error);
+            }
+        }
+        
+        function showMessage(message, type) {
+            // Remove existing messages
+            const existingMessages = document.querySelectorAll('.message');
+            existingMessages.forEach(msg => msg.remove());
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = message;
+            
+            document.body.appendChild(messageDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            const initialized = await initializeToolLauncher();
+            if (initialized) {
+                await loadTools();
+            }
+        });
+    </script>
+</body>
+</html>

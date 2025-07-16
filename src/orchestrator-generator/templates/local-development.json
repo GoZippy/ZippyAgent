@@ -1,0 +1,242 @@
+{
+  "name": "Local Development Template",
+  "description": "Local development environment setup with dev tools, hot reload, and debugging",
+  "type": "local_development",
+  "version": "1.0",
+  "metadata": {
+    "created_at": "2025-07-15",
+    "author": "ZippyAgent Platform",
+    "tags": ["development", "local", "devtools", "debugging", "hot-reload"]
+  },
+  "orchestrator": {
+    "name": "{{project_name}}",
+    "description": "{{description}}",
+    "type": "local_development",
+    "scale": "{{scale}}",
+    "technology": "{{technology}}",
+    "environment": "{{environment}}",
+    "features": "{{features}}"
+  },
+  "development": {
+    "runtime": "{{technology}}",
+    "package_manager": "auto_detect",
+    "hot_reload": true,
+    "debug_mode": true,
+    "source_maps": true,
+    "lint_on_save": true,
+    "format_on_save": true,
+    "test_on_save": false
+  },
+  "services": {
+    "app": {
+      "type": "application",
+      "runtime": "{{technology}}",
+      "port": 3000,
+      "watch": ["src/**/*", "public/**/*"],
+      "ignore": ["node_modules", "dist", "build", "*.log"],
+      "environment": {
+        "NODE_ENV": "development",
+        "DEBUG": "*",
+        "PORT": "3000"
+      },
+      "volumes": [
+        "./src:/app/src",
+        "./public:/app/public",
+        "./package.json:/app/package.json"
+      ]
+    },
+    "database": {
+      "type": "database",
+      "engine": "postgresql",
+      "port": 5432,
+      "environment": {
+        "POSTGRES_DB": "{{project_name}}_dev",
+        "POSTGRES_USER": "dev",
+        "POSTGRES_PASSWORD": "dev"
+      },
+      "volumes": [
+        "./data/dev_db:/var/lib/postgresql/data",
+        "./sql:/docker-entrypoint-initdb.d"
+      ],
+      "auto_migrate": true
+    },
+    "cache": {
+      "type": "cache",
+      "engine": "redis",
+      "port": 6379,
+      "environment": {
+        "REDIS_PASSWORD": ""
+      },
+      "volumes": [
+        "./data/dev_cache:/data"
+      ]
+    }
+  },
+  "tools": {
+    "code_editor": {
+      "vscode": {
+        "extensions": [
+          "ms-vscode.vscode-typescript-next",
+          "esbenp.prettier-vscode",
+          "ms-python.python",
+          "ms-vscode.powershell"
+        ],
+        "settings": {
+          "editor.formatOnSave": true,
+          "editor.codeActionsOnSave": {
+            "source.fixAll.eslint": true
+          }
+        }
+      }
+    },
+    "debugging": {
+      "enabled": true,
+      "debugger": "auto_detect",
+      "breakpoints": true,
+      "watch_expressions": true,
+      "call_stack": true,
+      "variables": true
+    },
+    "testing": {
+      "framework": "auto_detect",
+      "watch_mode": true,
+      "coverage": true,
+      "parallel": true,
+      "verbose": true
+    },
+    "linting": {
+      "enabled": true,
+      "fix_on_save": true,
+      "rules": "recommended"
+    },
+    "formatting": {
+      "enabled": true,
+      "on_save": true,
+      "style": "auto_detect"
+    }
+  },
+  "monitoring": {
+    "logs": {
+      "level": "debug",
+      "output": "console",
+      "file": "./logs/development.log",
+      "rotation": true
+    },
+    "metrics": {
+      "enabled": true,
+      "endpoint": "http://localhost:9090/metrics",
+      "interval": "10s"
+    },
+    "health_checks": {
+      "enabled": true,
+      "endpoint": "/health",
+      "interval": "30s"
+    }
+  },
+  "security": {
+    "https": {
+      "enabled": false,
+      "self_signed": true,
+      "cert_path": "./certs/"
+    },
+    "cors": {
+      "enabled": true,
+      "origin": "*",
+      "methods": ["GET", "POST", "PUT", "DELETE"],
+      "credentials": true
+    },
+    "secrets": {
+      "env_file": ".env.development",
+      "encrypt": false
+    }
+  },
+  "networking": {
+    "proxy": {
+      "enabled": false,
+      "target": "http://localhost:3000",
+      "port": 8080
+    },
+    "mock_services": {
+      "enabled": true,
+      "port": 3001,
+      "routes": "./mocks/routes.json"
+    }
+  },
+  "build": {
+    "bundler": "auto_detect",
+    "source_maps": true,
+    "minify": false,
+    "optimize": false,
+    "watch": true,
+    "incremental": true,
+    "output": "./dist"
+  },
+  "package_management": {
+    "auto_install": true,
+    "cache": true,
+    "lockfile": true,
+    "security_audit": true,
+    "outdated_check": true
+  },
+  "git_hooks": {
+    "pre_commit": [
+      "lint",
+      "format",
+      "test"
+    ],
+    "pre_push": [
+      "lint",
+      "test",
+      "build"
+    ]
+  },
+  "scripts": {
+    "setup": "Install dependencies and initialize development environment",
+    "start": "Start development server with hot reload",
+    "debug": "Start application in debug mode",
+    "test": "Run tests in watch mode",
+    "lint": "Run linter and fix issues",
+    "format": "Format code using configured formatter",
+    "build": "Build application for development",
+    "clean": "Clean build artifacts and cache"
+  },
+  "files": {
+    "orchestrator.json": {
+      "template": "local-development-config.json"
+    },
+    "tasks.ps1": {
+      "template": "local-development-tasks.ps1"
+    },
+    "docker-compose.dev.yml": {
+      "template": "docker-compose.dev.yml"
+    },
+    ".env.development": {
+      "template": "env-development"
+    },
+    ".vscode/": {
+      "settings.json": {
+        "template": "vscode-settings.json"
+      },
+      "launch.json": {
+        "template": "vscode-launch.json"
+      },
+      "extensions.json": {
+        "template": "vscode-extensions.json"
+      }
+    },
+    "scripts/": {
+      "setup.ps1": {
+        "template": "setup-script.ps1"
+      },
+      "start.ps1": {
+        "template": "start-script.ps1"
+      },
+      "test.ps1": {
+        "template": "test-script.ps1"
+      }
+    },
+    "README.md": {
+      "template": "local-development-readme.md"
+    }
+  }
+}

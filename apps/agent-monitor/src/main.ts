@@ -20,6 +20,26 @@ interface OrchestrationConfig {
   llm_api_key: string | null
 }
 
+interface ModelMetadata {
+  id: string
+  name: string
+  description: string | null
+  size: number | null
+  installed: boolean
+  version: string | null
+  download_url: string | null
+  checksum: string | null
+  created_at: string
+  updated_at: string
+}
+
+interface InstallProgress {
+  model_id: string
+  progress: number
+  status: string
+  error: string | null
+}
+
 // Initialize UI
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div class="container">
@@ -68,6 +88,18 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       </div>
     </div>
     
+    <div class="model-catalog-section">
+      <h2>Model Catalog</h2>
+      <div class="model-controls">
+        <button id="init-db" class="btn btn-primary">Initialize Database</button>
+        <button id="refresh-models" class="btn btn-info">Refresh Models</button>
+        <div class="search-box">
+          <input type="text" id="model-search" placeholder="Search models..." />
+        </div>
+      </div>
+      <div id="models-container"></div>
+    </div>
+    
     <div class="logs-section">
       <h2>Recent Logs</h2>
       <select id="agent-selector">
@@ -85,6 +117,10 @@ const checkOllamaButton = document.querySelector('#check-ollama') as HTMLButtonE
 const agentsContainer = document.querySelector('#agents-container') as HTMLDivElement
 const logsContainer = document.querySelector('#logs-container') as HTMLDivElement
 const agentSelector = document.querySelector('#agent-selector') as HTMLSelectElement
+const initDbButton = document.querySelector('#init-db') as HTMLButtonElement
+const refreshModelsButton = document.querySelector('#refresh-models') as HTMLButtonElement
+const modelSearchInput = document.querySelector('#model-search') as HTMLInputElement
+const modelsContainer = document.querySelector('#models-container') as HTMLDivElement
 
 // Chart setup
 const ctx = (document.querySelector('#metrics-chart') as HTMLCanvasElement).getContext('2d')
@@ -109,6 +145,11 @@ const metricsChart = new Chart(ctx!, {
 // Agent status tracking
 let agentStatuses: AgentStatus[] = []
 const metricsHistory: { [key: string]: number[] } = {}
+
+// Model catalog tracking
+let availableModels: ModelMetadata[] = []
+let filteredModels: ModelMetadata[] = []
+let installProgress: { [key: string]: InstallProgress } = {}
 
 // Event handlers
 startButton.addEventListener('click', async () => {
@@ -151,6 +192,32 @@ agentSelector.addEventListener('change', async (e) => {
   if (agentName) {
     await loadAgentLogs(agentName)
   }
+})
+
+// Model catalog event handlers
+initDbButton.addEventListener('click', async () => {
+  try {
+    const result = await invoke<string>('initialize_model_db')
+    showNotification(result, 'success')
+    await loadModels()
+  } catch (error) {
+    showNotification(`Error: ${error}`, 'error')
+  }
+})
+
+refreshModelsButton.addEventListener('click', async () => {
+  await loadModels()
+  await loadInstallProgress()
+})
+
+modelSearchInput.addEventListener('input', (e) => {
+  const searchTerm = (e.target as HTMLInputElement).value.toLowerCase()
+  filteredModels = availableModels.filter(model => 
+    model.name.toLowerCase().includes(searchTerm) || 
+    model.description?.toLowerCase().includes(searchTerm) ||
+    model.id.toLowerCase().includes(searchTerm)
+  )
+  updateModelsDisplay()
 })
 
 // Functions
@@ -262,6 +329,98 @@ function getColorForAgent(agentName: string, alpha: number = 1): string {
   return colors[agentName] || `rgba(201, 203, 207, ${alpha})`
 }
 
+// Model catalog functions
+async function loadModels() {
+  try {
+    availableModels = await invoke<ModelMetadata[]>('list_models')
+    filteredModels = [...availableModels]
+    updateModelsDisplay()
+  } catch (error) {
+    console.error('Error loading models:', error)
+    showNotification(`Error loading models: ${error}`, 'error')
+  }
+}
+
+async function loadInstallProgress() {
+  try {
+    installProgress = await invoke<{ [key: string]: InstallProgress }>('get_install_progress')
+    updateModelsDisplay()
+  } catch (error) {
+    console.error('Error loading install progress:', error)
+  }
+}
+
+function updateModelsDisplay() {
+  modelsContainer.innerHTML = filteredModels.map(model => {
+    const progress = installProgress[model.id]
+    const isInstalling = progress && progress.status === 'installing'
+    const hasError = progress && progress.error
+    
+    return `
+      <div class="model-card ${model.installed ? 'installed' : ''} ${isInstalling ? 'installing' : ''}">
+        <div class="model-header">
+          <h3>${model.name}</h3>
+          <div class="model-actions">
+            ${model.installed ? 
+              `<button class="btn btn-danger btn-sm" onclick="removeModel('${model.id}')">Remove</button>` :
+              `<button class="btn btn-primary btn-sm" onclick="installModel('${model.id}')" ${isInstalling ? 'disabled' : ''}>Install</button>`
+            }
+          </div>
+        </div>
+        
+        <div class="model-info">
+          <p>${model.description || 'No description available'}</p>
+          <div class="model-metadata">
+            <span>Size: ${formatSize(model.size)}</span>
+            <span>Version: ${model.version || 'Unknown'}</span>
+            <span>Status: ${model.installed ? 'Installed' : 'Available'}</span>
+          </div>
+        </div>
+        
+        ${progress ? `
+          <div class="install-progress">
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${progress.progress}%"></div>
+            </div>
+            <span class="progress-text">${progress.status} - ${progress.progress.toFixed(1)}%</span>
+            ${hasError ? `<div class="error-message">${progress.error}</div>` : ''}
+          </div>
+        ` : ''}
+      </div>
+    `
+  }).join('')
+}
+
+function formatSize(bytes: number | null): string {
+  if (!bytes) return 'Unknown'
+  const gb = bytes / (1024 * 1024 * 1024)
+  return `${gb.toFixed(1)} GB`
+}
+
+// Global functions for onclick handlers
+(window as any).installModel = async (modelId: string) => {
+  try {
+    const result = await invoke<string>('install_model', { modelId })
+    showNotification(result, 'success')
+    await loadInstallProgress()
+  } catch (error) {
+    showNotification(`Error installing model: ${error}`, 'error')
+  }
+}
+
+(window as any).removeModel = async (modelId: string) => {
+  try {
+    const result = await invoke<string>('remove_model', { modelId })
+    showNotification(result, 'success')
+    await loadModels()
+  } catch (error) {
+    showNotification(`Error removing model: ${error}`, 'error')
+  }
+}
+
 // Start monitoring
 loadAgentStatus()
 setInterval(loadAgentStatus, 2000) // Update every 2 seconds
+
+// Load models periodically
+setInterval(loadInstallProgress, 5000) // Update install progress every 5 seconds

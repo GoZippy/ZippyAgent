@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZippyAgent Orchestrator Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .toolbar {
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .search-box input:focus {
+            border-color: #3498db;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .orchestrator-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .orchestrator-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .orchestrator-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .card-status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-generated {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-running {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .card-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .meta-item strong {
+            color: #2c3e50;
+            margin-right: 5px;
+        }
+
+        .card-description {
+            color: #6c757d;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            margin-bottom: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 5px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #3498db;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .feature-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .feature-checkbox input {
+            width: auto;
+            margin: 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 ZippyAgent Orchestrator Dashboard</h1>
+            <p>Manage and deploy your orchestration configurations</p>
+        </div>
+
+        <div class="toolbar">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search orchestrators...">
+            </div>
+            <div>
+                <button class="btn btn-primary" onclick="openNewOrchestratorModal()">
+                    ➕ New Orchestrator
+                </button>
+                <button class="btn btn-success" onclick="refreshDashboard()">
+                    🔄 Refresh
+                </button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div id="loadingState" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Loading orchestrators...</p>
+            </div>
+
+            <div id="orchestratorGrid" class="orchestrator-grid">
+                <!-- Orchestrator cards will be dynamically generated here -->
+            </div>
+
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <h3>No orchestrators found</h3>
+                <p>Get started by creating your first orchestrator configuration.</p>
+                <button class="btn btn-primary" onclick="openNewOrchestratorModal()">
+                    ➕ Create Your First Orchestrator
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Orchestrator Modal -->
+    <div id="newOrchestratorModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeNewOrchestratorModal()">&times;</span>
+            <h2>Create New Orchestrator</h2>
+            <form id="newOrchestratorForm">
+                <div class="form-group">
+                    <label for="projectName">Project Name</label>
+                    <input type="text" id="projectName" name="projectName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="projectType">Project Type</label>
+                    <select id="projectType" name="projectType" required>
+                        <option value="">Select project type...</option>
+                        <option value="container_orchestration">Container Orchestration</option>
+                        <option value="vm_management">VM Management</option>
+                        <option value="local_development">Local Development</option>
+                        <option value="ci_cd">CI/CD Pipeline</option>
+                        <option value="monitoring">Monitoring</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="scale">Scale</label>
+                    <select id="scale" name="scale" required>
+                        <option value="">Select scale...</option>
+                        <option value="single_developer">Single Developer</option>
+                        <option value="small_team">Small Team</option>
+                        <option value="medium_team">Medium Team</option>
+                        <option value="enterprise">Enterprise</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="technology">Technology Stack</label>
+                    <select id="technology" name="technology" required>
+                        <option value="">Select technology...</option>
+                        <option value="nodejs">Node.js</option>
+                        <option value="python">Python</option>
+                        <option value="dotnet">.NET</option>
+                        <option value="java">Java</option>
+                        <option value="go">Go</option>
+                        <option value="rust">Rust</option>
+                        <option value="mixed">Mixed</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="environment">Environment</label>
+                    <select id="environment" name="environment" required>
+                        <option value="">Select environment...</option>
+                        <option value="local">Local</option>
+                        <option value="cloud">Cloud</option>
+                        <option value="on_premises">On-Premises</option>
+                        <option value="hybrid">Hybrid</option>
+                        <option value="edge">Edge</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Features</label>
+                    <div class="features-grid">
+                        <div class="feature-checkbox">
+                            <input type="checkbox" id="monitoring" name="features" value="monitoring">
+                            <label for="monitoring">Monitoring</label>
+                        </div>
+                        <div class="feature-checkbox">
+                            <input type="checkbox" id="logging" name="features" value="logging">
+                            <label for="logging">Logging</label>
+                        </div>
+                        <div class="feature-checkbox">
+                            <input type="checkbox" id="security" name="features" value="security">
+                            <label for="security">Security</label>
+                        </div>
+                        <div class="feature-checkbox">
+                            <input type="checkbox" id="backup" name="features" value="backup">
+                            <label for="backup">Backup</label>
+                        </div>
+                        <div class="feature-checkbox">
+                            <input type="checkbox" id="scaling" name="features" value="scaling">
+                            <label for="scaling">Scaling</label>
+                        </div>
+                        <div class="feature-checkbox">
+                            <input type="checkbox" id="networking" name="features" value="networking">
+                            <label for="networking">Networking</label>
+                        </div>
+                        <div class="feature-checkbox">
+                            <input type="checkbox" id="storage" name="features" value="storage">
+                            <label for="storage">Storage</label>
+                        </div>
+                        <div class="feature-checkbox">
+                            <input type="checkbox" id="secrets" name="features" value="secrets">
+                            <label for="secrets">Secrets</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Generate Orchestrator</button>
+                    <button type="button" class="btn btn-warning" onclick="closeNewOrchestratorModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Dashboard state
+        let orchestrators = [];
+        let currentSearch = '';
+
+        // Load orchestrators from registry
+        async function loadOrchestrators() {
+            try {
+                document.getElementById('loadingState').style.display = 'block';
+                document.getElementById('orchestratorGrid').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'none';
+
+                // Simulate API call - replace with actual call to PowerShell backend
+                const response = await fetch('/api/orchestrators');
+                orchestrators = await response.json();
+
+                renderOrchestrators();
+            } catch (error) {
+                console.error('Error loading orchestrators:', error);
+                // Show fallback data for demonstration
+                orchestrators = [
+                    {
+                        name: 'my-web-app',
+                        path: 'C:\\Projects\\ZippyAgent\\generated\\my-web-app',
+                        type: 'container_orchestration',
+                        scale: 'small_team',
+                        technology: 'nodejs',
+                        environment: 'cloud',
+                        features: ['monitoring', 'logging', 'security'],
+                        created_at: '2025-07-15 14:30:00',
+                        status: 'generated'
+                    },
+                    {
+                        name: 'ml-pipeline',
+                        path: 'C:\\Projects\\ZippyAgent\\generated\\ml-pipeline',
+                        type: 'vm_management',
+                        scale: 'medium_team',
+                        technology: 'python',
+                        environment: 'on_premises',
+                        features: ['monitoring', 'storage', 'backup'],
+                        created_at: '2025-07-15 13:15:00',
+                        status: 'running'
+                    }
+                ];
+                renderOrchestrators();
+            }
+        }
+
+        // Render orchestrators grid
+        function renderOrchestrators() {
+            document.getElementById('loadingState').style.display = 'none';
+            
+            const filteredOrchestrators = orchestrators.filter(orch => 
+                orch.name.toLowerCase().includes(currentSearch.toLowerCase()) ||
+                orch.type.toLowerCase().includes(currentSearch.toLowerCase()) ||
+                orch.technology.toLowerCase().includes(currentSearch.toLowerCase())
+            );
+
+            if (filteredOrchestrators.length === 0) {
+                document.getElementById('orchestratorGrid').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('orchestratorGrid').style.display = 'grid';
+            document.getElementById('emptyState').style.display = 'none';
+
+            const grid = document.getElementById('orchestratorGrid');
+            grid.innerHTML = filteredOrchestrators.map(orch => createOrchestratorCard(orch)).join('');
+        }
+
+        // Create orchestrator card HTML
+        function createOrchestratorCard(orch) {
+            const statusClass = `status-${orch.status}`;
+            const statusText = orch.status.charAt(0).toUpperCase() + orch.status.slice(1);
+            
+            return `
+                <div class="orchestrator-card">
+                    <div class="card-header">
+                        <div class="card-title">${orch.name}</div>
+                        <div class="card-status ${statusClass}">${statusText}</div>
+                    </div>
+                    
+                    <div class="card-meta">
+                        <div class="meta-item">
+                            <strong>Type:</strong> ${orch.type.replace('_', ' ')}
+                        </div>
+                        <div class="meta-item">
+                            <strong>Scale:</strong> ${orch.scale.replace('_', ' ')}
+                        </div>
+                        <div class="meta-item">
+                            <strong>Tech:</strong> ${orch.technology}
+                        </div>
+                        <div class="meta-item">
+                            <strong>Env:</strong> ${orch.environment}
+                        </div>
+                    </div>
+                    
+                    <div class="card-description">
+                        Features: ${orch.features.join(', ')}
+                    </div>
+                    
+                    <div class="card-actions">
+                        <button class="btn btn-success btn-sm" onclick="runOrchestrator('${orch.name}')">
+                            ▶️ Run
+                        </button>
+                        <button class="btn btn-warning btn-sm" onclick="editOrchestrator('${orch.name}')">
+                            ✏️ Edit
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="openFolder('${orch.path}')">
+                            📁 Open
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteOrchestrator('${orch.name}')">
+                            🗑️ Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Event handlers
+        function runOrchestrator(name) {
+            showMessage(`Running orchestrator: ${name}`, 'success');
+            // Call PowerShell backend to run orchestrator
+            fetch('/api/orchestrators/run', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+        }
+
+        function editOrchestrator(name) {
+            showMessage(`Editing orchestrator: ${name}`, 'success');
+            // Implement edit functionality
+        }
+
+        function openFolder(path) {
+            showMessage(`Opening folder: ${path}`, 'success');
+            // Call system to open folder
+        }
+
+        function deleteOrchestrator(name) {
+            if (confirm(`Are you sure you want to delete orchestrator "${name}"?`)) {
+                showMessage(`Deleted orchestrator: ${name}`, 'success');
+                // Call backend to delete orchestrator
+                loadOrchestrators();
+            }
+        }
+
+        function openNewOrchestratorModal() {
+            document.getElementById('newOrchestratorModal').style.display = 'block';
+        }
+
+        function closeNewOrchestratorModal() {
+            document.getElementById('newOrchestratorModal').style.display = 'none';
+        }
+
+        function refreshDashboard() {
+            loadOrchestrators();
+        }
+
+        function showMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `${type}-message`;
+            messageDiv.textContent = message;
+            
+            const mainContent = document.querySelector('.main-content');
+            mainContent.insertBefore(messageDiv, mainContent.firstChild);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 3000);
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            currentSearch = e.target.value;
+            renderOrchestrators();
+        });
+
+        // Form submission
+        document.getElementById('newOrchestratorForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const orchestratorData = {
+                project_name: formData.get('projectName'),
+                description: formData.get('description'),
+                project_type: formData.get('projectType'),
+                scale: formData.get('scale'),
+                technology: formData.get('technology'),
+                environment: formData.get('environment'),
+                features: formData.getAll('features'),
+                use_existing_templates: true,
+                generate_tests: true,
+                include_docs: true
+            };
+
+            try {
+                showMessage('Generating orchestrator...', 'success');
+                closeNewOrchestratorModal();
+                
+                // Call PowerShell backend to generate orchestrator
+                const response = await fetch('/api/orchestrators/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orchestratorData)
+                });
+
+                if (response.ok) {
+                    showMessage('Orchestrator generated successfully!', 'success');
+                    loadOrchestrators();
+                } else {
+                    throw new Error('Generation failed');
+                }
+            } catch (error) {
+                showMessage('Error generating orchestrator', 'error');
+                console.error('Error:', error);
+            }
+        });
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOrchestrators();
+        });
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('newOrchestratorModal');
+            if (event.target === modal) {
+                closeNewOrchestratorModal();
+            }
+        };
+    </script>
+</body>
+</html>
